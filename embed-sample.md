@@ -84,8 +84,19 @@
        }
    }
    ```
-
-8. **Create the Symlink:**
+8. **Move the SSL Certificate**
+   After writing the Nginx configuration file, move the certificate file and the PEM file to /etc/nginx/sites-available. Use the following command to transfer the files:
+   
+   ```bash
+   scp "C:\Users\PriyaSunilKumar\Downloads\Certificate.key" syncfusion@20.3.131.204:/home/syncfusion
+   ```
+   
+   Then, use the following command to move the files:
+   
+   ```bash
+   mv Certificate.key Certificate.pem /etc/nginx/sites-available/
+   ```
+9. **Create the Symlink:**
    Create a symbolic link to enable the site:
    ```bash
    sudo ln -s /etc/nginx/sites-available/nginxdotnet /etc/nginx/sites-enabled/nginxdotnet
