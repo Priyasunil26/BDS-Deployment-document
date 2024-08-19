@@ -18,13 +18,19 @@
    sudo cp -r . /var/www/nginxdotnet
    ```
 
-4. **Create a Service File:**
+4. **Set Permissions:**
+   After copying the files, set the permissions to ensure all users have read, write, and execute access:
+   ```bash
+   sudo chmod -R 777 /var/www/nginxdotnet
+   ```
+
+5. **Create a Service File:**
    Create a new service file to manage the application:
    ```bash
    sudo nano /etc/systemd/system/embed-nginxdotnet.service
    ```
 
-5. **Add the Following Configuration to the Service File:**
+6. **Add the Following Configuration to the Service File:**
    ```ini
    [Unit]
    Description=Nginx .NET App
@@ -44,7 +50,7 @@
    WantedBy=multi-user.target
    ```
 
-6. **Enable and Start the Service:**
+7. **Enable and Start the Service:**
    Now, enable the service and then start it using the following commands:
    ```bash
    sudo systemctl enable embed-nginxdotnet.service
@@ -52,7 +58,7 @@
    sudo systemctl status embed-nginxdotnet.service
    ```
 
-7. **Configure Nginx for the .NET App:**
+8. **Configure Nginx for the .NET App:**
    Open the Nginx site configuration file:
    ```bash
    sudo nano /etc/nginx/sites-available/nginxdotnet
@@ -84,7 +90,7 @@
        }
    }
    ```
-8. **Move the SSL Certificate**
+9. **Move the SSL Certificate**
    After writing the Nginx configuration file, move the certificate file and the PEM file to /etc/nginx/sites-available. Use the following command to transfer the files:
    
    ```bash
@@ -96,7 +102,7 @@
    ```bash
    mv Certificate.key Certificate.pem /etc/nginx/sites-available/
    ```
-9. **Create the Symlink:**
+10. **Create the Symlink:**
    Create a symbolic link to enable the site:
    ```bash
    sudo ln -s /etc/nginx/sites-available/nginxdotnet /etc/nginx/sites-enabled/nginxdotnet
