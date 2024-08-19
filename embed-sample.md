@@ -3,7 +3,8 @@
 1. **Move the Publish Folder to the Linux Machine:**
    Use the following command to securely copy the publish folder to your Linux machine:
    ```bash
-   scp "C:\Users\PriyaSunilKumar\Downloads\publish 1.zip" syncfusion@20.3.131.204:/home/syncfusion
+   scp "location to your publish folder" username@ipaddress:/home/username
+   scp "C:\Users\user\Downloads\publish1.zip" syncfusion@20.3.131.204:/home/syncfusion
    ```
 
 2. **Create a New Directory for the App:**
