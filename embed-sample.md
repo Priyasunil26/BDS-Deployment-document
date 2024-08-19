@@ -51,6 +51,9 @@
    WantedBy=multi-user.target
    ```
 
+     - `ExecStart`: The command that starts the application. Ensure to replace the path to your DLL file as needed.
+        ExecStart=/var/www/bold-services/dotnet/dotnet path/to/your/dll/file --urls=http://localhost:5000
+
 7. **Enable and Start the Service:**
    Now, enable the service and then start it using the following commands:
    ```bash
@@ -95,7 +98,7 @@
    After writing the Nginx configuration file, move the certificate file and the PEM file to /etc/nginx/sites-available. Use the following command to transfer the files:
    
    ```bash
-   scp "C:\Users\PriyaSunilKumar\Downloads\Certificate.key" syncfusion@20.3.131.204:/home/syncfusion
+   scp "C:\Users\user\Downloads\Certificate.key" syncfusion@20.3.131.204:/home/syncfusion
    ```
    
    Then, use the following command to move the files:
