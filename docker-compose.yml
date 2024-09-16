@@ -1,0 +1,50 @@
+version: '3.5'
+
+services:
+  boldbi:
+   container_name: boldbi
+   image: syncfusion/boldbi
+   restart: always
+   ports:
+     - 80:80
+     - 443:443
+   environment:
+      # Required
+     - BOLD_SERVICES_UNLOCK_KEY=@362e31382e30UmlchnZOXraw7U0NUyXtvNyHqG5bSX5kI89kFPCXYMI=eyJFbWFpbCI6InZpbm90aGtyaXNobmFtb29ydGh5QHN5bmNmdXNpb24uY29tIiwiUHJvZHVjdHMiOlt7IlRlbmFudElkIjoiMTg1OWNhMTYtZGU2Yi00MjRkLWFlYzYtNzljMDc1OTI0ZDI4IiwiQUlTZXJ2aWNlS2V5IjoiWVdselpYSjJhV05sWDNCeWIyUjFZM1JwYjI1ZlNVUjNUMXBxVkdWc1JVRnpXR0ZyV2xWYWFuVjBkMmgwIiwiRW1haWwiOiJ2aW5vdGhrcmlzaG5hbW9vcnRoeUBzeW5jZnVzaW9uLmNvbSIsIlBsYW4iOnsiUGxhbklkIjoxMTcsIlBsYW5OYW1lIjoiQm9sZCBCSSBQbHVzIiwiSXNNdWx0aVRlbmFudCI6dHJ1ZSwiSXNVc2VyQmFzZWRMaWNlbnNlIjpmYWxzZSwiVXNlcnMiOjAsIklzQXV0aG9yQmFzZWRMaWNlbnNlIjpmYWxzZSwiQXV0aG9ycyI6MCwiRW50ZXJwcmlzZUZlYXR1cmVzIjp7IkN1c3RvbURvbWFpbiI6dHJ1ZSwiVGhpcmRQYXJ0eUxvZ2lucyI6dHJ1ZSwiRGF0YUFsZXJ0cyI6dHJ1ZSwiRGF0YVNvdXJjZUV4dHJhY3RJbnRlcnZhbHMiOiI1bWluLDE1bWluLDMwbWluLDFociw2aHIsMTJociwyNGhyLDF3aywxbW9uIiwiV2hpdGVMYWJlbCI6dHJ1ZSwiRW1iZWQiOnRydWV9fSwiVGVuYW50VHlwZSI6MywiVmVyc2lvbiI6IjYuMTguMTEiLCJFeHBpcnlUaW1lU3RhbXAiOiIxNzM0ODQxMTM0IiwiVGVuYW50U3RhdHVzIjoiQWN0aXZlIiwiU3Vic2NyaXB0aW9uTmFtZSI6ImJvbGRiaS12aW5vdGgiLCJJc1BlcnBldHVhbExpY2Vuc2UiOmZhbHNlfV0sIkxpY2Vuc2VQZXJpb2QiOiIyMDI0LTEyLTIyVDA0OjE4OjU0LjA0MDUyODRaIiwiSXNFU1VzZXIiOmZhbHNlLCJJc1BlcnBldHVhbExpY2Vuc2UiOmZhbHNlfQ==   # Set the unlock key value from the unlock_key.lic file, which can be obtained from the accounts page(https://www.boldbi.com/account).
+      # Optional: Default values are fine for evaluation purposes.
+     - BOLD_SERVICES_DB_TYPE=postgresql                      # Preconfigured PostgreSQL database details that are deployed along with this deployment.
+     - BOLD_SERVICES_DB_HOST=pgdb
+     - BOLD_SERVICES_POSTGRESQL_MAINTENANCE_DB=postgres
+     - BOLD_SERVICES_DB_USER=postgres
+     - BOLD_SERVICES_DB_PASSWORD=Admin@123
+     - BOLD_SERVICES_USER_EMAIL=testuser@boldbi.com          # Set the site admin user Mail ID.
+     - BOLD_SERVICES_USER_PASSWORD=Admin@123                 # Set the site admin user password.
+   networks:
+     - boldbi
+   volumes:
+     - boldbi_data:/application/app_data
+
+  pgdb:
+    container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: Admin@123
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    networks:
+      - boldbi
+
+  adhoc:
+    container_name: adhoc
+    image: test:2.0
+    restart: always
+    networks:
+      - boldbi
+
+networks:
+  boldbi:
+
+volumes:
+  boldbi_data:
+  db_data:
