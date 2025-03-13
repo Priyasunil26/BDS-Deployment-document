@@ -13,6 +13,7 @@ This document describes the step-by-step process for deploying Sentry in your GK
 ## Install Sentry using Helm Chart:
 
 * Create a new namespace named `dev-sentry` for Sentry workloads.
+   ![create-namespace](screen-shots/namespace-create.png)
 * Run the following commands in Google Cloud Shell to update and add the Sentry charts ClickHouse repository:
 
     ``` cmd
