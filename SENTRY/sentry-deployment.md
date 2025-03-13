@@ -6,14 +6,16 @@ This document describes the step-by-step process for deploying Sentry in your GK
 
 * Get the GKE command line access command from the GKE portal.
 * Click on the connect button and get the command.
-* Open the Google Cloud Shell and run the command.
+* Open the Google Cloud Shell and run the command
 
     ![GCP connect](screen-shots/gcp-connect.png)
 
 ## Install Sentry using Helm Chart:
 
 * Create a new namespace named `dev-sentry` for Sentry workloads.
+
    ![create-namespace](screen-shots/namespace-create.png)
+   
 * Run the following commands in Google Cloud Shell to update and add the Sentry charts ClickHouse repository:
 
     ``` cmd
