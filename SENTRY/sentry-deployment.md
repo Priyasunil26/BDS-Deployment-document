@@ -1,4 +1,4 @@
-# Steps to Deploy Sentry in GKE (BoldSign):
+# Steps to Deploy Sentry in GKE:
 
 This document describes the step-by-step process for deploying Sentry in your GKE cluster.
 
@@ -230,7 +230,7 @@ kubectl exec -it sentry-zookeeper-clickhouse-0 -n dev-sentry -- bash
 ```
 ![GCP connect](screen-shots/Zookeeper-bash.png)
 
-### 🔹 2. Check Disk Space Usage
+### 2. Check Disk Space Usage
 
 To check how much disk space Zookeeper is consuming, run:
 
@@ -284,6 +284,63 @@ find . -type f -mtime 10 -exec rm -f {} +
   ```bash
   find . -type f -mtime +10 -exec rm -f {} +
   ```
+
+  Here’s your improved and corrected document in **Markdown (MD)** format with enhanced structure, formatting, and clarity:
+  
+## How to Enable External PostgreSQL and Redis in Sentry (Helm)
+
+This guide explains how to configure **Sentry** to use external **PostgreSQL** and **Redis** servers instead of the default in-cluster services.
+
+### Configure External PostgreSQL
+
+To use an external PostgreSQL database:
+
+#### 1. Disable the Default PostgreSQL
+
+In your `values.yaml`, set:
+
+```bash
+postgresql:
+  enabled: false  # Disables the bundled PostgreSQL and allows external usage
+```
+#### 2. Configure External PostgreSQL Details
+
+Add the external database settings under `externalPostgresql`:
+
+```bash
+externalPostgresql:
+  host: "your-postgresql-host"        # External PostgreSQL server hostname
+  port: 5432                          # Default PostgreSQL port
+  username: "your-username"           # PostgreSQL username
+  password: "your-password"           # PostgreSQL user password
+  database: "sentry"                  # Must be 'sentry' for compatibility
+  connMaxAge: 0                       # Optional: set to higher value for connection reuse
+```
+
+### Configure External Redis
+
+To use an external Redis instance:
+
+#### 1. Disable the Default Redis
+
+In your `values.yaml`, set:
+
+```bash
+redis:
+  enabled: false  # Disables internal Redis, enabling external configuration
+```
+
+#### 2. Configure External Redis Details
+
+Provide connection information under `externalRedis`:
+
+```bash
+externalRedis:
+  host: "your-redis-host"           # Redis server hostname
+  port: 6379                        # Default Redis port
+  password: "your-redis-password"   # Redis password (if required)
+```
+
 ## Solution to Fix the Issue in Snuba Consumer Metrics:
 
 * After deploying Sentry, you may encounter an issue with the consumer. To resolve the issue, follow the steps below.
