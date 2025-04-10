@@ -228,6 +228,8 @@ Use the following command to open a bash session in the pod:
 ```bash
 kubectl exec -it sentry-zookeeper-clickhouse-0 -n dev-sentry -- bash
 ```
+![GCP connect](screen-shots/Zookeeper-bash.png)
+
 ### 🔹 2. Check Disk Space Usage
 
 To check how much disk space Zookeeper is consuming, run:
@@ -235,6 +237,8 @@ To check how much disk space Zookeeper is consuming, run:
 ```bash
 df -h
 ```
+![GCP connect](screen-shots/disk-space.png)
+
 ### 3. Navigate to the Zookeeper Logs and Snapshot Directory
 
 Move to the directory where Zookeeper stores its data:
@@ -248,6 +252,9 @@ Then, list all the files with details:
 ```bash
 ls -lh
 ```
+
+![GCP connect](screen-shots/zookeeper-data.png)
+
 ### 4. Verify Files Before Deleting
 
 Check files that were last modified **exactly 10 days ago**:
@@ -257,6 +264,8 @@ find . -type f -mtime 10 -exec ls -lt {} +
 ```
 Ensure the output lists only the files you intend to delete before proceeding.
 
+![GCP connect](screen-shots/list-file-delete.png)
+
 ### 5. Delete Old Log Files
 
 Once verified, delete the old files:
@@ -264,6 +273,7 @@ Once verified, delete the old files:
 ```bash
 find . -type f -mtime 10 -exec rm -f {} +
 ```
+![GCP connect](screen-shots/delete-files.png)
 
 #### Notes:
 
