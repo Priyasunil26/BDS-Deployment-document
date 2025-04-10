@@ -287,7 +287,7 @@ find . -type f -mtime 10 -exec rm -f {} +
 
   Here’s your improved and corrected document in **Markdown (MD)** format with enhanced structure, formatting, and clarity:
   
-## How to Enable External PostgreSQL and Redis in Sentry (Helm)
+## How to Enable External PostgreSQL and Redis in Sentry
 
 This guide explains how to configure **Sentry** to use external **PostgreSQL** and **Redis** servers instead of the default in-cluster services.
 
@@ -340,7 +340,89 @@ externalRedis:
   port: 6379                        # Default Redis port
   password: "your-redis-password"   # Redis password (if required)
 ```
+## How to Use an Existing PVC in Sentry
 
+If you want Sentry to use an **existing Persistent Volume Claim (PVC)** instead of dynamically creating a new one, follow these steps. This is useful when you're managing your own storage (e.g., via NFS) and want control over volume configuration.
+
+
+To use an existing PVC:
+```yaml
+## If existingClaim is specified, no PVC will be created and this claim will be used.
+existingClaim: "sentry-filestore-pvc"
+```
+
+Just set the `existingClaim` value in the `values.yaml` file, and Sentry will **automatically use that PVC** instead of creating a new one.
+
+### Step-by-Step Guide
+
+#### Step 1: Create a Persistent Volume (PV) and Persistent Volume Claim (PVC)
+
+Before installing or upgrading Sentry, manually create the required PV and PVC in your cluster:
+
+```yaml
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sentry-filestore-pvc
+  namespace: dev-sentry
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: sentry-filestore-pv
+  storageClassName: standard-rwx
+---
+# Persistent Volume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sentry-filestore-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard-rwx
+  nfs:
+    path: /filestore/sentry-data
+    server: 10.109.10.2
+```
+
+Apply it:
+
+```bash
+kubectl apply -f sentry-pv-pvc.yaml
+```
+
+---
+
+### Step 2: Configure Your `values.yaml` for Sentry
+
+In the `values.yaml` file used by Helm, update the filestore section:
+
+```yaml
+filestore:
+  backend: filesystem
+  filesystem:
+    path: /var/lib/sentry/files
+    persistence:
+      enabled: true
+      existingClaim: "sentry-filestore-pvc"  # ✅ Use your existing PVC here
+      accessMode: ReadWriteMany
+      persistentWorkers: true
+```
+
+### Step 3: Install or Upgrade Sentry
+
+Install or upgrade your Sentry Helm release with the updated values:
+
+```bash
+helm upgrade --install sentry sentry/sentry -f values.yaml -n dev-sentry
+```
 ## Solution to Fix the Issue in Snuba Consumer Metrics:
 
 * After deploying Sentry, you may encounter an issue with the consumer. To resolve the issue, follow the steps below.
