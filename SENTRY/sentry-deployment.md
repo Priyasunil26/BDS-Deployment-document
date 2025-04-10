@@ -140,70 +140,6 @@ This document describes the step-by-step process for deploying Sentry in your GK
     | rabbitmq | 200m  | -  | 500Mi | 500Mi |
     | snuba-subscriptionConsumerTransactions | 50m  | -  | 200Mi | 200Mi |
 
-## Solution to Fix the Issue in Snuba Consumer Metrics:
-
-* After deploying Sentry, you may encounter an issue with the consumer. To resolve the issue, follow the steps below.
-* Connect to the Sentry ClickHouse pod using the command below.
-
-    ``` cmd
-    kubectl exec -it sentry-clickhouse-0 -n dev-sentry -- bash
-    ```
-* Access the ClickHouse table and display the number of tables using the command show tables.
-* Delete the metrics table in ClickHouse and create a new table using the command below.
-
-    ``` cmd
-    clickhouse-client -h sentry-clickhouse
-    SHOW TABLES;
-    DESCRIBE TABLE default.metrics_raw_v2_dist;
-    SELECT COUNT(*) FROM default.metrics_raw_v2_dist;
-    DROP table default.metrics_raw_v2_dist ON CLUSTER 'sentry-clickhouse' SYNC;
-
-    CREATE TABLE default.metrics_raw_v2_dist ON CLUSTER 'sentry-clickhouse' 
-    (
-    `use_case_id` LowCardinality(String),
-    `org_id` UInt64,
-    `project_id` UInt64,
-    `metric_id` UInt64,
-    `timestamp` DateTime,
-    `tags.key` Array(UInt64),
-    `tags.value` Array(UInt64),
-    `metric_type` LowCardinality(String),
-    `set_values` Array(UInt64),
-    `count_value` Float64,
-    `distribution_values` Array(Float64),
-    `materialization_version` UInt8,
-    `retention_days` UInt16,
-    `partition` UInt16,
-    `offset` UInt64,
-    `timeseries_id` UInt32
-    )
-    ENGINE = Distributed('sentry-clickhouse', 'default', 'metrics_raw_v2_local', sipHash64('timeseries_id'));
-    ```
-
-
-
-
-
-
-## Change Below Configuration for Performance:
-
-* Due to heavy traffic in event capture, sometimes Sentry stops listing recent errors. This issue can be resolved by configuring the following performance settings.
-
-    ![sentry-relay-config](screen-shots/sentry-relay-config.png)
-    ![sentry-relay-config2](screen-shots/sentry-relay-config2.png)
-
-* Navigate to the Sentry Relay configuration, edit it, and include the following changes. Then, refresh the Sentry Relay workload.
-
-    `cache.project_grace_period` - Increasing this value may help when the upstream is unreachable, for example, due to network issues.
-
-    `cache.project_expiry` - Increasing this value can reduce the frequency of project expiry due to network issues.
-
-    `cache.event_buffer_size` - This setting determines how many events Relay can buffer in its local queue before it starts rejecting new 
-    events. Increasing this value will prevent Relay from forwarding received messages to Sentry during network issues.
-
-    `limits.max_concurrent_requests` -  This sets the number of concurrent requests your Relay instance can send to the upstream (Sentry). 
-    If your event volume or connection latency to Sentry is high, you can increase this value to gain additional throughput.
-
 ## SMTP configuration
 ### Enabling SMTP in Sentry
 
@@ -279,9 +215,128 @@ To check if the SMTP settings are working correctly, perform the following:
   kubectl logs -n sentry sentry-web-<pod_name>
   ```
 
-#### Conclusion
 Enabling SMTP in Sentry ensures that email notifications are delivered properly. By configuring the `values.yaml` file and applying the changes using Helm, you can set up and test the SMTP functionality for your Sentry instance. If any issues arise, check the SMTP logs and ensure that the credentials and SMTP settings are correct.
 
+## Cleaning Up Zookeeper Logs in ClickHouse Pod
+
+This guide helps you clean up Zookeeper logs in the ClickHouse pod to free up disk space and maintain a healthy system.
+
+### 1. Access the Zookeeper ClickHouse Pod
+
+Use the following command to open a bash session in the pod:
+
+```bash
+kubectl exec -it sentry-zookeeper-clickhouse-0 -n dev-sentry -- bash
+```
+### 🔹 2. Check Disk Space Usage
+
+To check how much disk space Zookeeper is consuming, run:
+
+```bash
+df -h
+```
+### 3. Navigate to the Zookeeper Logs and Snapshot Directory
+
+Move to the directory where Zookeeper stores its data:
+
+```bash
+cd /bitnami/zookeeper/data/version-2/
+```
+
+Then, list all the files with details:
+
+```bash
+ls -lh
+```
+### 4. Verify Files Before Deleting
+
+Check files that were last modified **exactly 10 days ago**:
+
+```bash
+find . -type f -mtime 10 -exec ls -lt {} +
+```
+Ensure the output lists only the files you intend to delete before proceeding.
+
+### 5. Delete Old Log Files
+
+Once verified, delete the old files:
+
+```bash
+find . -type f -mtime 10 -exec rm -f {} +
+```
+
+#### Notes:
+
+- This command deletes all files modified **exactly** 10 days ago.
+- The `-mtime` option calculates file age based on **24-hour periods**.
+- To delete files **older than 10 days**, change `-mtime 10` to `+10`:
+
+  ```bash
+  find . -type f -mtime +10 -exec rm -f {} +
+  ```
+## Solution to Fix the Issue in Snuba Consumer Metrics:
+
+* After deploying Sentry, you may encounter an issue with the consumer. To resolve the issue, follow the steps below.
+* Connect to the Sentry ClickHouse pod using the command below.
+
+    ``` cmd
+    kubectl exec -it sentry-clickhouse-0 -n dev-sentry -- bash
+    ```
+* Access the ClickHouse table and display the number of tables using the command show tables.
+* Delete the metrics table in ClickHouse and create a new table using the command below.
+
+    ``` cmd
+    clickhouse-client -h sentry-clickhouse
+    SHOW TABLES;
+    DESCRIBE TABLE default.metrics_raw_v2_dist;
+    SELECT COUNT(*) FROM default.metrics_raw_v2_dist;
+    DROP table default.metrics_raw_v2_dist ON CLUSTER 'sentry-clickhouse' SYNC;
+
+    CREATE TABLE default.metrics_raw_v2_dist ON CLUSTER 'sentry-clickhouse' 
+    (
+    `use_case_id` LowCardinality(String),
+    `org_id` UInt64,
+    `project_id` UInt64,
+    `metric_id` UInt64,
+    `timestamp` DateTime,
+    `tags.key` Array(UInt64),
+    `tags.value` Array(UInt64),
+    `metric_type` LowCardinality(String),
+    `set_values` Array(UInt64),
+    `count_value` Float64,
+    `distribution_values` Array(Float64),
+    `materialization_version` UInt8,
+    `retention_days` UInt16,
+    `partition` UInt16,
+    `offset` UInt64,
+    `timeseries_id` UInt32
+    )
+    ENGINE = Distributed('sentry-clickhouse', 'default', 'metrics_raw_v2_local', sipHash64('timeseries_id'));
+    ```
+
+
+
+
+
+
+## Change Below Configuration for Performance:
+
+* Due to heavy traffic in event capture, sometimes Sentry stops listing recent errors. This issue can be resolved by configuring the following performance settings.
+
+    ![sentry-relay-config](screen-shots/sentry-relay-config.png)
+    ![sentry-relay-config2](screen-shots/sentry-relay-config2.png)
+
+* Navigate to the Sentry Relay configuration, edit it, and include the following changes. Then, refresh the Sentry Relay workload.
+
+    `cache.project_grace_period` - Increasing this value may help when the upstream is unreachable, for example, due to network issues.
+
+    `cache.project_expiry` - Increasing this value can reduce the frequency of project expiry due to network issues.
+
+    `cache.event_buffer_size` - This setting determines how many events Relay can buffer in its local queue before it starts rejecting new 
+    events. Increasing this value will prevent Relay from forwarding received messages to Sentry during network issues.
+
+    `limits.max_concurrent_requests` -  This sets the number of concurrent requests your Relay instance can send to the upstream (Sentry). 
+    If your event volume or connection latency to Sentry is high, you can increase this value to gain additional throughput.
 
 # References:
 
