@@ -261,6 +261,8 @@ Check files that were last modified **exactly 10 days ago**:
 
 ```bash
 find . -type f -mtime 10 -exec ls -lt {} +
+
+find . -type f -newermt 2025-03-01 ! -newermt 2025-04-01 -ls
 ```
 Ensure the output lists only the files you intend to delete before proceeding.
 
@@ -272,6 +274,8 @@ Once verified, delete the old files:
 
 ```bash
 find . -type f -mtime 10 -exec rm -f {} +
+
+find . -type f -newermt 2025-03-01 ! -newermt 2025-04-01 -delete
 ```
 ![GCP connect](screen-shots/delete-files.png)
 
