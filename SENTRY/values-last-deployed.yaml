@@ -209,17 +209,10 @@ sentry:
     probePeriodSeconds: 15
     probeSuccessThreshold: 1
     probeTimeoutSeconds: 5
-    # resources: {}
-    # #  requests:
-    # #    cpu: 200m
-    # #    memory: 850Mi
-
-        # Sentry web error issue
-    resources:
-      limits:
-        memory: 2Gi
-      requests:
-        memory: 1Gi
+    resources: {}
+    #  requests:
+    #    cpu: 200m
+    #    memory: 850Mi
     affinity: {}
     nodeSelector: {}
     securityContext: {}
@@ -1675,38 +1668,38 @@ hooks:
 
 system:
   ## be sure to include the scheme on the url, for example: "https://sentry.example.com"
-  url: "https://sentry-dev.boldbidemo.com"
+  url: "https://sentry-dev-testing.boldbidemo.com"
   adminEmail: ""
   ## This should only be used if you’re installing Sentry behind your company’s firewall.
   public: true
   ## This will generate one for you (it's must be given upon updates)
   # secretKey: "xx"
 
-# mail:
-#   # For example: smtp
-#   backend: dummy
-#   useTls: false
-#   useSsl: false
-#   username: ""
-#   password: ""
-#   # existingSecret: secret-name
-#   ## set existingSecretKey if key name inside existingSecret is different from 'mail-password'
-#   # existingSecretKey: secret-key-name
-#   port: 25
-#   host: ""
-#   from: ""
-
 mail:
-  backend: smtp
-  useTls: true
+  # For example: smtp
+  backend: dummy
+  useTls: false
   useSsl: false
-  username: "AKIARWYFLOTLS7B3CQ4C"
-  password: ""  
-  existingSecret: "smtp-secret"  # Use the secret name created
-  existingSecretKey: "password"  # Key inside the secret
-  port: 587
-  host: "email-smtp.us-west-1.amazonaws.com"
-  from: "sentry@boldbi.com"
+  username: ""
+  password: ""
+  # existingSecret: secret-name
+  ## set existingSecretKey if key name inside existingSecret is different from 'mail-password'
+  # existingSecretKey: secret-key-name
+  port: 25
+  host: ""
+  from: ""
+
+# mail:
+#   backend: smtp
+#   useTls: true
+#   useSsl: false
+#   username: "AKIARWYFLOTLS7B3CQ4C"
+#   password: ""  
+#   existingSecret: "smtp-secret"  # Use the secret name created
+#   existingSecretKey: "password"  # Key inside the secret
+#   port: 587
+#   host: "email-smtp.us-west-1.amazonaws.com"
+#   from: "sentry@boldbi.com"
 
 
 symbolicator:
@@ -1888,13 +1881,13 @@ ingress:
   #   nginx.ingress.kubernetes.io/proxy-buffers-number: "16"
   #   nginx.ingress.kubernetes.io/proxy-buffer-size: "32k"
   #
-  hostname: sentry-dev.boldbidemo.com
+  hostname: sentry-dev-testing.boldbidemo.com
   # additionalHostNames: []
   #
   tls:
   - secretName: bold-tls
     hosts:
-      - sentry-dev.boldbidemo.com
+      - sentry-dev-testing.boldbidemo.com
 
 filestore:
   # Set to one of filesystem, gcs or s3 as supported by Sentry.
@@ -1915,7 +1908,7 @@ filestore:
       ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
       ##   GKE, AWS & OpenStack)
       ##
-      storageClassName: "standard-rwx"
+      storageClassName: "standard-rwo"
       accessMode: ReadWriteMany  # Set ReadWriteMany for work Replays
       size: 10Gi
 
@@ -1932,9 +1925,7 @@ filestore:
       ## If existingClaim is specified, no PVC will be created and this claim will
       ## be used
       # existingClaim: ""
-      existingClaim: "sentry-filestore-pvc"
-
-
+      existingClaim: "pvc-sentry"
   gcs: {}
     ## Point this at a pre-configured secret containing a service account. The resulting
     ## secret will be mounted at /var/run/secrets/google
@@ -1961,6 +1952,7 @@ config:
   # No YAML Extension Config Given
   configYml: {}
   sentryConfPy: |
+    # No Python Extension Config Given
     INTERNAL_CORS_ORIGINS = [
       "https://dev-v2.boldreports.com",
       "https://staging-v2.boldreports.com"
@@ -2007,11 +1999,13 @@ clickhouse:
 
     persistentVolumeClaim:
       enabled: true
+      existingClaim: pvc-sentry
       dataPersistentVolume:
-        enabled: true
-        accessModes:
-          - "ReadWriteOnce"
-        storage: "30Gi"
+        enabled: false
+      #   existingClaim: pvc-sentry
+      #   accessModes:
+      #     - "ReadWriteOnce"
+        # storage: "30Gi"
 
   ## Use this to enable an extra service account
   # serviceAccount:
@@ -2050,8 +2044,15 @@ zookeeper:
   nodeSelector: {}
   # tolerations: []
   ## When increasing the number of exceptions, you need to increase persistence.size
-  # persistence:
-  #   size: 8Gi
+  persistence:
+    enabled: true
+    existingClaim: pvc-sentry
+  volumePermissions:
+    enabled: true
+    # size: 8Gi
+  # autopurge:
+  #   purgeInterval: 24        # cleanup runs daily
+  #   snapRetainCount: 10 
 
 # Settings for Kafka.
 # See https://github.com/bitnami/charts/tree/master/bitnami/kafka
@@ -2191,8 +2192,11 @@ kafka:
     ## if the load on the kafka controller increases, resourcesPreset must be increased
     resourcesPreset: large # small, medium, large, xlarge, 2xlarge
     ## if the load on the kafka controller increases, persistence.size must be increased
-    # persistence:
-    #   size: 8Gi
+    persistence:
+      # size: 8Gi
+      enabled: true
+      # existingClaim: pvc-sentry
+
   ## Use this to enable an extra service account
   # serviceAccount:
   #   create: false
@@ -2260,6 +2264,9 @@ redis:
   replica:
     replicaCount: 1
     nodeSelector: {}
+    persistence:
+      enabled: true
+      existingClaim: pvc-sentry
     # tolerations: []
   auth:
     enabled: false
@@ -2273,6 +2280,7 @@ redis:
   master:
     persistence:
       enabled: true
+      existingClaim: pvc-sentry
     nodeSelector: {}
     # tolerations: []
   ## Use this to enable an extra service account
@@ -2308,6 +2316,8 @@ postgresql:
     synchronousCommit: "on"
     numSynchronousReplicas: 1
     applicationName: sentry
+  volumePermissions:
+    enabled: true
   ## Use this to enable an extra service account
   # serviceAccount:
   #   enabled: false
@@ -2321,9 +2331,11 @@ postgresql:
   #    nodeSelector: {}
   #    tolerations: []
   ## When increasing the number of exceptions, you need to increase persistence.size
-  # primary:
-  #   persistence:
-  #     size: 8Gi
+
+  primary:
+    persistence:
+      enabled: true
+      existingClaim: pvc-sentry
 
 ## This value is only used when postgresql.enabled is set to false
 ## Set either externalPostgresql.password or externalPostgresql.existingSecret to configure password
@@ -2364,6 +2376,7 @@ rabbitmq:
     create: true
   persistence:
     enabled: true
+    existingClaim: pvc-sentry
   resources: {}
   memoryHighWatermark: {}
     # enabled: true
