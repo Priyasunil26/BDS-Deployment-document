@@ -131,6 +131,7 @@ Ensure:
 * [GitHub Issue #3272](https://github.com/getsentry/self-hosted/issues/3272)
 * [Official Self-hosted Repo](https://github.com/getsentry/self-hosted)
 * [GitHub Issue #3272 - issuecomment-2949112982](https://github.com/getsentry/self-hosted/issues/3592#issuecomment-2949112982)
+* [Sentry-features](https://github.com/getsentry/sentry/blob/24.11.2/src/sentry/features/temporary.py)
 
 ---
 
