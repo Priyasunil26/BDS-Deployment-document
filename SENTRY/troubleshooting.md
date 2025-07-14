@@ -64,6 +64,7 @@ SENTRY_FEATURES.update({
     "organizations:performance-trace-details": True,
 })
 ```
+![configmap-update](screen-shots/configmap-update.png)
 
 These three flags are **sufficient** to enable basic trace viewing and interaction in the Sentry UI.
 
@@ -107,6 +108,8 @@ After the restart:
 * Log in to the Sentry web interface.
 * Navigate to **Performance > Traces**.
 * If successful, you should **see traces and spans** listed.
+
+![traces](screen-shots/traces.png)
 
 If you see a message like:
 
