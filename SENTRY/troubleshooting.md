@@ -11,8 +11,6 @@ unable to load app 0 (mountpoint='') (callable not found or import error)
 
 The pod remained in `Running` state but failed to properly serve the application.
 
----
-
 ### **Cause**
 
 This issue occurs because the **Sentry database migrations were not applied** after the deployment. Without these migrations:
@@ -20,9 +18,7 @@ This issue occurs because the **Sentry database migrations were not applied** af
 * Required database tables and configurations are missing.
 * The application cannot fully initialize.
 * uWSGI is unable to load the Django app, resulting in the "no app loaded" error.
-
----
-
+  
 ### ✅ **Resolution**
 
 Running the following command inside the pod resolves the issue:
@@ -121,7 +117,7 @@ Ensure:
 * The pods were fully restarted.
 * You're using the correct `sentry.conf.py` (and it's correctly mounted or injected into the pod).
   
-## Summary
+### Summary
 
 | Feature Set              | Required Flags                                                                        |
 | ------------------------ | ------------------------------------------------------------------------------------- |
@@ -129,9 +125,73 @@ Ensure:
 | Advanced Span & Explorer | Add additional flags like `visibility-explore-view`, `indexed-spans-extraction`, etc. |
 
 
-## References
+### References
 
 * [GitHub Issue #3592](https://github.com/getsentry/self-hosted/issues/3592)
 * [GitHub Issue #3272](https://github.com/getsentry/self-hosted/issues/3272)
 * [Official Self-hosted Repo](https://github.com/getsentry/self-hosted)
 * [GitHub Issue #3272 - issuecomment-2949112982](https://github.com/getsentry/self-hosted/issues/3592#issuecomment-2949112982)
+
+---
+
+## Kafka Retention Policy Configuration (Helm Chart)
+
+This configuration enables the Kafka component in your self-hosted deployment and applies default **time-based log retention** settings to all topics.
+
+### Configuration Overview
+
+```yaml
+kafka:
+  enabled: true
+  extraConfig: |
+    # Set default time-based retention for all topics to 3 days (in ms)
+    log.retention.ms=259200000
+
+    # Optionally, set maximum log size per topic to 2GB
+    # log.retention.bytes=2147483648
+```
+
+### Explanation
+
+| Setting               | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `log.retention.ms`    | Retains log segments for **259200000 ms** (3 days).       |
+| `log.retention.bytes` | (Optional) Retains logs until topic size reaches **2GB**. |
+
+
+`log.retention.ms=259200000` - This Kafka broker configuration controls **how long Kafka retains log data (messages) on disk** for **each topic**.
+
+#### Value Breakdown:
+
+* `log.retention.ms` sets the **retention period** in **milliseconds**.
+* `259200000 ms = 259,200,000 milliseconds`
+* Which equals **3 days** (`3 days * 24 hours * 60 minutes * 60 seconds * 1000 ms`).
+
+#### What It Means:
+
+Kafka will **automatically delete log segments** that are **older than 3 days** to free up disk space. This is useful for:
+
+* Keeping disk usage under control.
+* Preventing Kafka from holding outdated/unneeded messages.
+
+#### Important Notes:
+
+* This is a **global default**. If specific topics have different retention policies configured, those will override this default.
+* Kafka deletes **log segments**, not individual messages. Messages within a log segment are only deleted once the entire segment is older than the retention period.
+
+#### Related Settings:
+
+* `log.retention.bytes`: Retain logs based on size instead of time.
+* `log.segment.ms`: Controls how often new segments are rolled, which affects when deletion kicks in.
+
+## How to Apply
+
+Update your `values.yaml` file with the above configuration, then apply/redeploy your Helm chart:
+
+```bash
+helm upgrade sentry sentry/sentry -n dev-sentry -f .\values-deployed_07_01.yaml --wait --timeout 45m
+```
+
+> **Note:** Retention applies only to new log segments. Restart Kafka pods if needed.
+
+---
